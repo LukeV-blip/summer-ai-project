@@ -5,7 +5,7 @@ st.set_page_config(page_title="AI Career Coach", page_icon="💼", layout="cente
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-st.title("💼 AI Career Coach")
+st.title(" AI Career Coach")
 st.write("Turn student experiences into professional resume bullets and interview prep.")
 
 st.warning("Privacy note: Do not enter private information like your full address, phone number, SSN, or passwords.")
