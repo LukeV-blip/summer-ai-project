@@ -17,8 +17,8 @@ client = OpenAI(
 
 # ---------------- TITLE ---------------- #
 
-st.title("💼 AI Career Coach")
-st.subheader("Resume Builder + Interview Prep + Ethical AI")
+st.title(" AI Career Coach")
+st.subheader("Resume Builder + Interview Prep")
 
 st.write(
     """
