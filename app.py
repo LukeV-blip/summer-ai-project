@@ -1,58 +1,129 @@
 import streamlit as st
 from openai import OpenAI
 
-st.set_page_config(page_title="AI Career Coach", page_icon="💼", layout="centered")
+# ---------------- PAGE SETUP ---------------- #
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+st.set_page_config(
+    page_title="AI Career Coach",
+    page_icon="💼",
+    layout="centered"
+)
 
-st.title(" AI Career Coach")
-st.write("Turn student experiences into professional resume bullets and interview prep.")
+# ---------------- OPENAI CLIENT ---------------- #
 
-st.warning("Privacy note: Do not enter private information like your full address, phone number, SSN, or passwords.")
+client = OpenAI(
+    api_key=st.secrets["OPENAI_API_KEY"]
+)
+
+# ---------------- TITLE ---------------- #
+
+st.title("💼 AI Career Coach")
+st.subheader("Resume Builder + Interview Prep + Ethical AI")
+
+st.write(
+    """
+    This app helps students turn experiences into professional resume bullets
+    while encouraging honesty and ethical AI use.
+    """
+)
+
+# ---------------- PRIVACY WARNING ---------------- #
+
+st.warning(
+    "Do NOT enter sensitive information like passwords, home addresses, phone numbers, or social security numbers."
+)
+
+# ---------------- USER INPUTS ---------------- #
 
 job_type = st.selectbox(
-    "What type of opportunity are you applying for?",
+    "What are you applying for?",
     [
-        "Summer job",
+        "Summer Job",
         "Internship",
-        "Volunteer position",
-        "College application",
+        "Volunteer Position",
+        "College Application",
         "Scholarship",
-        "Club leadership role"
+        "Club Leadership Role"
+    ]
+)
+
+tone = st.selectbox(
+    "Choose a writing style",
+    [
+        "Professional",
+        "Confident",
+        "Leadership-Focused",
+        "Teamwork-Focused",
+        "Simple"
     ]
 )
 
 experience = st.text_area(
-    "Describe your activity or experience",
-    placeholder="Example: I helped organize robotics meetings and worked on the team robot."
+    "Describe your experience or activity",
+    placeholder="Example: I helped organize robotics meetings and worked on the robot design team."
 )
 
-tone = st.selectbox(
-    "Choose a style",
-    ["Professional", "Confident", "Simple", "Leadership-focused", "Teamwork-focused"]
+# ---------------- RED TEAM FILTER ---------------- #
+
+dishonest_words = [
+    "fake",
+    "lie",
+    "make up",
+    "pretend",
+    "not true",
+    "exaggerate"
+]
+
+# ---------------- TABS ---------------- #
+
+tab1, tab2, tab3 = st.tabs(
+    [
+        "Resume Builder",
+        "Interview Prep",
+        "CSP Reflection"
+    ]
 )
 
-tab1, tab2, tab3 = st.tabs(["Resume Bullet", "Interview Prep", "CSP Reflection"])
+# =========================================================
+# TAB 1 — RESUME BUILDER
+# =========================================================
 
 with tab1:
-    if st.button("Generate Resume Bullet"):
-        if len(experience.strip()) < 10:
-            st.error("Please write a little more detail first.")
-        else:
-            with st.spinner("Improving your resume bullet..."):
-                prompt = f"""
-                Rewrite the student's experience into one strong resume bullet.
 
-                Opportunity type: {job_type}
-                Style: {tone}
-                Student experience: {experience}
+    if st.button("Generate Resume Bullet"):
+
+        # Empty input check
+        if len(experience.strip()) < 10:
+            st.error("Please provide more detail about your experience.")
+
+        # Dishonesty filter
+        elif any(word in experience.lower() for word in dishonest_words):
+            st.error(
+                "I can help improve real experiences professionally, but I cannot help invent fake achievements."
+            )
+
+        else:
+
+            with st.spinner("Generating professional resume bullet..."):
+
+                prompt = f"""
+                Rewrite the student's experience into a professional resume bullet.
+
+                Job Type:
+                {job_type}
+
+                Writing Style:
+                {tone}
+
+                Student Experience:
+                {experience}
 
                 Requirements:
-                - Start with a strong action verb
-                - Make it professional but believable for a high school student
-                - Do not invent fake numbers or achievements
-                - If numbers are missing, suggest where the student could add them
-                - Include a short explanation of why the bullet is stronger
+                - Use strong action verbs
+                - Keep it realistic for a high school student
+                - DO NOT invent fake awards, titles, or numbers
+                - If details are missing, suggest placeholders
+                - Add a short explanation of why the bullet is stronger
                 """
 
                 response = client.chat.completions.create(
@@ -60,7 +131,16 @@ with tab1:
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are a helpful resume coach for high school students."
+                            "content": """
+                            You are an ethical resume coach for students.
+
+                            Rules:
+                            1. Never invent fake achievements.
+                            2. Never exaggerate qualifications.
+                            3. Refuse dishonest requests.
+                            4. Encourage truthful and professional wording.
+                            5. Never guarantee employment success.
+                            """
                         },
                         {
                             "role": "user",
@@ -69,25 +149,40 @@ with tab1:
                     ]
                 )
 
-                st.success("Done!")
-                st.write(response.choices[0].message.content)
+                result = response.choices[0].message.content
+
+                st.success("Resume bullet generated successfully!")
+
+                st.write(result)
+
+# =========================================================
+# TAB 2 — INTERVIEW PREP
+# =========================================================
 
 with tab2:
-    if st.button("Generate Interview Questions"):
-        if len(experience.strip()) < 10:
-            st.error("Please write your experience first.")
-        else:
-            with st.spinner("Creating interview prep..."):
-                prompt = f"""
-                Based on this student experience, create interview prep.
 
-                Opportunity type: {job_type}
-                Experience: {experience}
+    if st.button("Generate Interview Questions"):
+
+        if len(experience.strip()) < 10:
+            st.error("Please provide your experience first.")
+
+        else:
+
+            with st.spinner("Preparing interview questions..."):
+
+                prompt = f"""
+                Create interview preparation based on this student experience.
+
+                Job Type:
+                {job_type}
+
+                Experience:
+                {experience}
 
                 Include:
                 - 5 likely interview questions
-                - 1 sample answer using the STAR method
-                - 3 tips for sounding confident
+                - 1 example STAR-method answer
+                - 3 interview confidence tips
                 """
 
                 response = client.chat.completions.create(
@@ -95,7 +190,10 @@ with tab2:
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are an interview coach for high school students."
+                            "content": """
+                            You are a supportive interview coach for students.
+                            Give realistic and encouraging advice.
+                            """
                         },
                         {
                             "role": "user",
@@ -104,19 +202,45 @@ with tab2:
                     ]
                 )
 
-                st.success("Done!")
-                st.write(response.choices[0].message.content)
+                result = response.choices[0].message.content
+
+                st.success("Interview prep generated!")
+
+                st.write(result)
+
+# =========================================================
+# TAB 3 — CSP REFLECTION
+# =========================================================
 
 with tab3:
-    st.subheader("AP CSP Connection")
-    st.write("""
-    This app connects to AP CSP because it uses:
 
-    **Algorithms:** The app follows a step-by-step process: input → prompt → AI response → output.
+    st.header("AP CSP Connections")
 
-    **Abstraction:** The OpenAI API hides the complex AI model behind a simple function call.
+    st.write(
+        """
+        ### Algorithms
+        The app follows a step-by-step process:
+        user input → filtering → AI prompt → AI response → output.
 
-    **Data Privacy:** The app warns users not to enter sensitive personal information.
+        ### Abstraction
+        The OpenAI API allows us to use advanced AI without needing
+        to understand neural network mathematics.
 
-    **Testing:** Users can test weak inputs, vague inputs, or unrealistic claims to see how the AI responds.
-    """)
+        ### Data Privacy
+        Users are warned not to submit personal or sensitive information.
+
+        ### Testing / Red Teaming
+        We tested the AI with:
+        - dishonest requests
+        - vague inputs
+        - unrealistic claims
+        - privacy risks
+
+        The system prompt and filters were improved to reduce hallucinations
+        and unethical outputs.
+
+        ### Global Impact
+        AI can help students improve communication and confidence,
+        but it also raises concerns about misinformation and honesty.
+        """
+    )
